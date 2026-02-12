@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎆 新春烟火大会 🎆</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            font-family: 'Microsoft YaHei', sans-serif;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        #canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .title {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ff6b6b, 0 0 40px #ff6b6b;
+            animation: glow 2s ease-in-out infinite alternate;
+            pointer-events: auto;
+        }
+
+        .title h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            letter-spacing: 8px;
+        }
+
+        .title p {
+            font-size: 0.9em;
+            color: #fff;
+            opacity: 0.9;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #ff6b6b, 0 0 30px #ff6b6b; }
+            to { text-shadow: 0 0 30px #ffd700, 0 0 50px #ff6b6b, 0 0 70px #ff6b6b; }
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 95%;
+            padding: 0 10px;
+            z-index: 20;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            color: #ffd700;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: rgba(255, 215, 0, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            border-color: #ffd700;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.active {
+            background: rgba(255, 215, 0, 0.35);
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .btn.muted {
+            border-color: #666;
+            color: #999;
+        }
+
+        .stats {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8em;
+            text-align: right;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .music-info {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #ffd700;
+            font-size: 0.8em;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,215,0,0.3);
+            display: none;
+        }
+
+        .lantern {
+            position: absolute;
+            width: 50px;
+            height: 65px;
+            background: radial-gradient(ellipse at center, #ff6b6b 0%, #c92a2a 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .lantern::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 8px;
+            background: #8b4513;
+            border-radius: 2px;
+        }
+
+        .lantern::after {
+            content: '福';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        .lantern:nth-child(1) { left: 8%; top: 15%; animation-delay: 0s; }
+        .lantern:nth-child(2) { left: 88%; top: 12%; animation-delay: 2s; }
+        .lantern:nth-child(3) { left: 3%; top: 50%; animation-delay: 4s; }
+
+        .message {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: 1.8em;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .message.show {
+            animation: messagePop 2s ease-out forwards;
+        }
+
+        @keyframes messagePop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        .volume-panel {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,215,0,0.5);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255,0,0,0.3);
+            z-index: 30;
+            pointer-events: auto;
+        }
+
+        .volume-panel.show {
+            display: flex;
+        }
+
+        .volume-panel input[type="range"] {
+            width: 150px;
+            height: 6px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #ff0000, #ffd700);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .volume-panel input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255,215,0,0.8);
+        }
+
+        .volume-panel span {
+            color: #ffd700;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            cursor: pointer;
+            transition: opacity 0.5s;
+        }
+
+        .start-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .start-text {
+            color: #ffd700;
+            font-size: 2.5em;
+            text-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000;
+            animation: pulse 1.5s infinite;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .start-sub {
+            color: #fff;
+            font-size: 1.1em;
+            opacity: 0.9;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .start-hint {
+            margin-top: 25px;
+            color: #ff6b6b;
+            font-size: 0.9em;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .title h1 { font-size: 1.8em; letter-spacing: 4px; }
+            .title p { font-size: 0.8em; }
+            .btn { padding: 6px 12px; font-size: 0.75em; }
+            .stats { font-size: 0.7em; top: 10px; right: 10px; }
+            .music-info { font-size: 0.7em; top: 10px; left: 10px; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="ui-layer">
+        <div class="music-info" id="musicInfo">
+            🎵 <span id="currentTrack">春节序曲</span>
+        </div>
+
+        <div class="title">
+            <h1>🧧 新春快乐 🧧</h1>
+            <p>点击放烟火 | 空格自动 | M键音乐</p>
+        </div>
+        
+        <div class="lantern"></div>
+        <div class="lantern"></div>
+        <div class="lantern"></div>
+        
+        <div class="stats">
+            <div>🎆 <span id="count">0</span> 发</div>
+            <div>FPS: <span id="fps">60</span></div>
+        </div>
+
+        <div class="volume-panel" id="volumePanel">
+            <span>🔊</span>
+            <input type="range" min="0" max="100" value="60" id="volumeSlider">
+            <span id="volumeValue">60%</span>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAuto()" id="autoBtn">▶ 自动</button>
+            <button class="btn" onclick="toggleMusic()" id="musicBtn">🎵 音乐</button>
+            <button class="btn" onclick="toggleSFX()" id="sfxBtn">🔊 音效</button>
+            <button class="btn" onclick="toggleVolume()">🎚 音量</button>
+            <button class="btn" onclick="switchTrack()">🎶 切歌</button>
+            <button class="btn" onclick="clearSky()">✨ 清空</button>
+            <button class="btn" onclick="changeColor()">🎨 主题</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+
+    <div class="start-overlay" id="startOverlay" onclick="startGame()">
+        <div class="start-text">🎆 新春烟火大会 🎆</div>
+        <div class="start-sub">
+            点击屏幕开始游戏<br>
+            体验沉浸式春节氛围
+        </div>
+        <div class="start-hint">点击任意处开始 ▶</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let width, height;
+        
+        let fireworks = [];
+        let particles = [];
+        let stars = [];
+        let autoFire = false;
+        let fireCount = 0;
+        let themeIndex = 0;
+        let frameCount = 0;
+        let lastFpsTime = 0;
+        let gameStarted = false;
+        
+        let musicEnabled = false;
+        let sfxEnabled = true;
+        let musicVolume = 0.6;
+        let audioContext = null;
+        let musicTimeout = null;
+        let currentTrack = 0;
+        let noteIndex = 0;
+        
+        const particlePool = [];
+        const maxPoolSize = 500;
+        
+        const themes = [
+            ['#ff0000', '#ffd700', '#ff6600', '#ff0066', '#ffff00', '#ff4444'],
+            ['#ff006e', '#fb5607', '#ffbe0b', '#8338ec', '#3a86ff'],
+            ['#f72585', '#7209b7', '#3a0ca3', '#4361ee', '#4cc9f0'],
+            ['#ff0000', '#ff4444', '#ff8888', '#ffd700', '#ffff00'],
+            ['#ffffff', '#fff5e6', '#ffe4b5', '#ffd700', '#ffa500']
+        ];
+
+        const tracks = [
+            {
+                name: '春节序曲',
+                tempo: 180,
+                notes: [
+                    {f: 523, d: 200}, {f: 523, d: 200}, {f: 659, d: 400},
+                    {f: 523, d: 200}, {f: 587, d: 200}, {f: 523, d: 400},
+                    {f: 784, d: 300}, {f: 659, d: 300}, {f: 523, d: 600},
+                    {f: 880, d: 200}, {f: 784, d: 200}, {f: 659, d: 200}, {f: 587, d: 200},
+                    {f: 659, d: 800}
+                ]
+            },
+            {
+                name: '恭喜恭喜',
+                tempo: 160,
+                notes: [
+                    {f: 392, d: 300}, {f: 392, d: 300}, {f: 440, d: 300}, {f: 392, d: 300},
+                    {f: 523, d: 500}, {f: 494, d: 600},
+                    {f: 392, d: 300}, {f: 392, d: 300}, {f: 440, d: 300}, {f: 392, d: 300},
+                    {f: 587, d: 500}, {f: 523, d: 600}
+                ]
+            },
+            {
+                name: '财神到',
+                tempo: 200,
+                notes: [
+                    {f: 523, d: 150}, {f: 523, d: 150}, {f: 587, d: 300},
+                    {f: 523, d: 150}, {f: 587, d: 150}, {f: 659, d: 300},
+                    {f: 784, d: 150}, {f: 784, d: 150}, {f: 880, d: 300},
+                    {f: 784, d: 150}, {f: 880, d: 150}, {f: 1047, d: 600}
+                ]
+            },
+            {
+                name: '步步高',
+                tempo: 190,
+                notes: [
+                    {f: 392, d: 150}, {f: 440, d: 150}, {f: 494, d: 150}, {f: 523, d: 150},
+                    {f: 587, d: 300}, {f: 523, d: 300}, {f: 494, d: 300}, {f: 440, d: 300},
+                    {f: 523, d: 150}, {f: 587, d: 150}, {f: 659, d: 150}, {f: 784, d: 150},
+                    {f: 880, d: 800}
+                ]
+            }
+        ];
+
+        const messages = [
+            '新年快乐！', '万事如意！', '恭喜发财！', 
+            '大吉大利！', '步步高升！', '心想事成！',
+            '龙马精神！', '财源广进！', '阖家欢乐！'
+        ];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 100; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height * 0.6,
+                    size: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random(),
+                    twinkleSpeed: Math.random() * 0.02 + 0.01
+                });
+            }
+        }
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, duration, volume = 0.3) {
+            if (!audioContext || !musicEnabled) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            
+            gain.gain.setValueAtTime(volume * musicVolume, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.start();
+            osc.stop(audioContext.currentTime + duration / 1000);
+        }
+
+        function playDrum() {
+            if (!audioContext || !musicEnabled) return;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.frequency.setValueAtTime(100, audioContext.currentTime);
+            gain.gain.setValueAtTime(0.4 * musicVolume, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.1);
+        }
+
+        function playCurrentTrack() {
+            if (!musicEnabled || !audioContext) return;
+            
+            const track = tracks[currentTrack];
+            const note = track.notes[noteIndex % track.notes.length];
+            
+            playTone(note.f, note.d);
+            if (Math.random() < 0.2) playDrum();
+            
+            noteIndex++;
+            musicTimeout = setTimeout(() => {
+                if (musicEnabled) playCurrentTrack();
+            }, note.d * (60000 / track.tempo) / 1000);
+        }
+
+        function startMusic() {
+            if (!musicEnabled) return;
+            noteIndex = 0;
+            playCurrentTrack();
+            document.getElementById('musicInfo').style.display = 'block';
+            document.getElementById('currentTrack').textContent = tracks[currentTrack].name;
+        }
+
+        function stopMusic() {
+            if (musicTimeout) {
+                clearTimeout(musicTimeout);
+                musicTimeout = null;
+            }
+            noteIndex = 0;
+            document.getElementById('musicInfo').style.display = 'none';
+        }
+
+        function playExplosionSound() {
+            if (!audioContext || !sfxEnabled) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioContext.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3 * musicVolume, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playLaunchSound() {
+            if (!audioContext || !sfxEnabled) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.frequency.setValueAtTime(300, audioContext.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2 * musicVolume, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.2);
+        }
+
+        function toggleMusic() {
+            initAudio();
+            musicEnabled = !musicEnabled;
+            const btn = document.getElementById('musicBtn');
+            
+            if (musicEnabled) {
+                btn.innerHTML = '🎵 音乐:开';
+                btn.classList.add('active');
+                startMusic();
+            } else {
+                btn.innerHTML = '🎵 音乐:关';
+                btn.classList.remove('active');
+                stopMusic();
+            }
+        }
+
+        function toggleSFX() {
+            sfxEnabled = !sfxEnabled;
+            const btn = document.getElementById('sfxBtn');
+            btn.innerHTML = sfxEnabled ? '🔊 音效:开' : '🔇 音效:关';
+            btn.classList.toggle('muted', !sfxEnabled);
+        }
+
+        function toggleVolume() {
+            const panel = document.getElementById('volumePanel');
+            panel.classList.toggle('show');
+        }
+
+        function updateVolume(value) {
+            musicVolume = value / 100;
+            document.getElementById('volumeValue').textContent = value + '%';
+        }
+
+        function switchTrack() {
+            currentTrack = (currentTrack + 1) % tracks.length;
+            noteIndex = 0;
+            if (musicEnabled) {
+                document.getElementById('currentTrack').textContent = tracks[currentTrack].name;
+                showMessage(`🎶 ${tracks[currentTrack].name}`);
+            } else {
+                showMessage('请先开启音乐');
+            }
+        }
+
+        class Firework {
+            constructor(targetX, targetY) {
+                this.x = Math.random() * width;
+                this.y = height;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.speed = 8 + Math.random() * 3;
+                const angle = Math.atan2(targetY - this.y, targetX - this.x);
+                this.vx = Math.cos(angle) * this.speed;
+                this.vy = Math.sin(angle) * this.speed;
+                this.trail = [];
+                this.hue = Math.random() * 360;
+                this.dead = false;
+                this.type = Math.floor(Math.random() * 3);
+                
+                if (gameStarted && sfxEnabled) playLaunchSound();
+            }
+
+            update() {
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 8) this.trail.shift();
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.12;
+
+                const dist = Math.hypot(this.x - this.targetX, this.y - this.targetY);
+                if (dist < 30 || (this.vy > 0 && this.y < this.targetY)) {
+                    this.explode();
+                    this.dead = true;
+                }
+            }
+
+            explode() {
+                if (gameStarted && sfxEnabled) playExplosionSound();
+                
+                const colors = themes[themeIndex];
+                const count = this.type === 2 ? 60 : (this.type === 1 ? 50 : 40);
+                
+                for (let i = 0; i < count; i++) {
+                    let angle, velocity;
+                    
+                    if (this.type === 2) {
+                        const t = (i / count) * Math.PI * 2;
+                        const hx = 16 * Math.pow(Math.sin(t), 3);
+                        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                        angle = Math.atan2(hy, hx);
+                        velocity = Math.sqrt(hx*hx + hy*hy) * 0.25;
+                    } else {
+                        angle = (Math.PI * 2 / count) * i + Math.random() * 0.3;
+                        velocity = 2 + Math.random() * 3;
+                        if (this.type === 1) velocity *= 0.8;
+                    }
+                    
+                    createParticle(
+                        this.x, this.y, angle, velocity,
+                        colors[Math.floor(Math.random() * colors.length)],
+                        this.type === 1
+                    );
+                }
+
+                if (Math.random() < 0.25) {
+                    showMessage(messages[Math.floor(Math.random() * messages.length)]);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                
+                for (let i = 1; i < this.trail.length; i++) {
+                    const alpha = i / this.trail.length;
+                    ctx.beginPath();
+                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 60%, ${alpha})`;
+                    ctx.moveTo(this.trail[i-1].x, this.trail[i-1].y);
+                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
+
+        function createParticle(x, y, angle, velocity, color, isChrysanthemum) {
+            let p;
+            if (particlePool.length > 0) {
+                p = particlePool.pop();
+                p.x = x; p.y = y;
+                p.vx = Math.cos(angle) * velocity;
+                p.vy = Math.sin(angle) * velocity;
+                p.color = color;
+                p.alpha = 1;
+                p.isChrysanthemum = isChrysanthemum;
+                p.life = 1;
+            } else {
+                p = {
+                    x: x, y: y,
+                    vx: Math.cos(angle) * velocity,
+                    vy: Math.sin(angle) * velocity,
+                    color: color,
+                    alpha: 1,
+                    isChrysanthemum: isChrysanthemum,
+                    life: 1
+                };
+            }
+            particles.push(p);
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                
+                p.vx *= 0.96;
+                p.vy *= 0.96;
+                p.vy += 0.08;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.015;
+                p.life -= 0.015;
+                
+                if (p.isChrysanthemum && p.alpha > 0.5) {
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                }
+                
+                if (p.alpha <= 0 || p.life <= 0) {
+                    if (particlePool.length < maxPoolSize) {
+                        particlePool.push(p);
+                    }
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.classList.remove('show');
+            void msg.offsetWidth;
+            msg.classList.add('show');
+        }
+
+        function createFirework(x, y) {
+            fireworks.push(new Firework(x, y));
+            fireCount++;
+            document.getElementById('count').textContent = fireCount;
+        }
+
+        function toggleAuto() {
+            autoFire = !autoFire;
+            const btn = document.getElementById('autoBtn');
+            btn.textContent = autoFire ? '⏸ 停止' : '▶ 自动';
+            btn.classList.toggle('active', autoFire);
+            if (autoFire) autoFireLoop();
+        }
+
+        function autoFireLoop() {
+            if (!autoFire) return;
+            createFirework(
+                Math.random() * width * 0.8 + width * 0.1,
+                Math.random() * height * 0.4 + height * 0.1
+            );
+            setTimeout(autoFireLoop, 400 + Math.random() * 600);
+        }
+
+        function clearSky() {
+            fireworks = [];
+            particles.length = 0;
+        }
+
+        function changeColor() {
+            themeIndex = (themeIndex + 1) % themes.length;
+            showMessage('主题已切换！');
+        }
+
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+            
+            initAudio();
+            document.getElementById('startOverlay').classList.add('hidden');
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createFirework(
+                        width/2 + (Math.random() - 0.5) * 400,
+                        height/3 + Math.random() * 200
+                    );
+                }, i * 200);
+            }
+            
+            setTimeout(() => {
+                if (!musicEnabled) toggleMusic();
+            }, 800);
+        }
+
+        function drawStars() {
+            for (const star of stars) {
+                star.alpha += star.twinkleSpeed;
+                if (star.alpha > 1 || star.alpha < 0.2) star.twinkleSpeed *= -1;
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(star.alpha)})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawCity() {
+            const gradient = ctx.createLinearGradient(0, height - 100, 0, height);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, height - 100, width, 100);
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            let x = 0;
+            while (x < width) {
+                const w = 25 + Math.random() * 40;
+                const h = 40 + Math.random() * 80;
+                ctx.fillRect(x, height - h, w, h);
+                x += w + 3;
+            }
+        }
+
+        function loop(timestamp) {
+            frameCount++;
+            if (timestamp - lastFpsTime >= 1000) {
+                document.getElementById('fps').textContent = frameCount;
+                frameCount = 0;
+                lastFpsTime = timestamp;
+            }
+
+            ctx.fillStyle = 'rgba(15, 12, 41, 0.25)';
+            ctx.fillRect(0, 0, width, height);
+
+            drawStars();
+            drawCity();
+
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const fw = fireworks[i];
+                fw.update();
+                fw.draw();
+                if (fw.dead) fireworks.splice(i, 1);
+            }
+
+            updateParticles();
+            drawParticles();
+
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameStarted) {
+                startGame();
+                return;
+            }
+            createFirework(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameStarted) {
+                startGame();
+                return;
+            }
+            const touch = e.touches[0];
+            createFirework(touch.clientX, touch.clientY);
+        }, {passive: false});
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleAuto();
+            }
+            if (e.code === 'KeyM') {
+                toggleMusic();
+            }
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            updateVolume(e.target.value);
+        });
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('volumePanel');
+            const btn = e.target.closest('.btn');
+            if (!panel.contains(e.target) && (!btn || !btn.textContent.includes('音量'))) {
+                panel.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('resize', resize);
+
+        resize();
+        loop(0);
+    </script>
+</body>
+</html>
